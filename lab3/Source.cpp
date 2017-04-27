@@ -22,7 +22,8 @@ int main() {
 	RECT rc;
 
 	HPEN whitePen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-
+	HPEN redPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
+	HPEN bluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
 
 
 	int xn = 0, yn = 0, size;
@@ -46,9 +47,16 @@ int main() {
 	SelectObject(hdc, whitePen);
 	Grid(&hdc, xn, yn, size);
 
-	Sorttreug(&hdc, 0, 0, 0, 20, 10, 15, size);
 
-	/*LineCda(&hdc, x1, y1, x2, y2, size);
+	SelectObject(hdc, redPen);
+	Sorttreug(&hdc, 10, 10, 60, 90, 90, 30, size);
+
+	SelectObject(hdc, bluePen);
+	LineBrezenhem(&hdc, 10, 10, 60, 90, size);
+	LineBrezenhem(&hdc, 60, 90, 90, 30, size);
+	LineBrezenhem(&hdc, 90, 30, 10, 10, size);
+
+	/*LineCda(&hdc, x1, y1, x2, y2, size);*/
 
 	cout << "Введите координаты начала отрезка для алгоритма Брезенхема: ";
 	cin >> x1 >> y1;
@@ -56,7 +64,7 @@ int main() {
 	cin >> x2 >> y2;
 
 	LineBrezenhem(&hdc, x1, y1, x2, y2, size);
-
+/*
 	cout << "Введите координаты центра окружности для алгоритма Брезенхема: ";
 	cin >> x1 >> y1;
 	cout << "Введите радиус окружности: ";
@@ -127,8 +135,8 @@ int sign(double a) {
 
 //рисование отрезка по алгоритму Брезенхема 
 void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size) {
-	HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-	SelectObject(*hdc, redBrush);
+	/*HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+	SelectObject(*hdc, redBrush);*/
 
 	int dx, dy, ch = 0, i = 0, e, dx2, dy2;
 	x2 -= x1; dx = abs(x2);
@@ -147,7 +155,7 @@ void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size) {
 	dy2 = dy << 1; // dx2 = 2*dx; dy2 = 2*dy; 
 
 	e = dy2 - dx; // Начальное значение ошибки;
-	for (i = 0; i < dx; ++i) {
+	for (i = 0; i <= dx; ++i) {
 
 		printPoint(hdc, x1, y1, size);
 		if (e > 0) {
@@ -195,8 +203,8 @@ void DrawCircle(HDC* hdc, int x1, int y1, int radius, int size) {
 
 
 void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int size) {
-	int X[3] = { Ay,By,Cy };
-	int Y[3] = { Ax,Bx,Cx };
+	int X[3] = { Ax,Bx,Cx };
+	int Y[3] = { Ay,By,Cy };
 
 	for (int i = 0; i<2; i++)
 		for (int j = 0; j<2; j++)
@@ -224,6 +232,47 @@ void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int siz
 		if (x1 > x2)
 			swap(x1, x2);
 
-		LineBrezenhem(hdc, x1, sy + 1, x2, sy + 1, size);
+		LineBrezenhem(hdc, x1, sy, x2, sy, size);
 	}
+
+
+
 }
+
+/*int LineFill(int x, int y, int dir, int PrevXl, int PrevXr, int **L, int BolderColor, int Color)
+{
+	int xl = x, xr = x;
+	int c;
+	do
+		c = L[--xl][y];
+	while ((c != BolderColor) && (c != Color));
+	do
+		c = L[++xr][y];
+	while ((c != BolderColor) && (c != Color));
+	xl++;
+	xr--;
+	Line(xl, y, xr, y, L, Color);
+	for (x = xl; x <= xr; x++)
+	{
+		c = L[x][y + dir];
+		if ((c != BolderColor) && (c != Color))
+			x = LineFill(x, y + dir, dir, xl,
+				xr, L, BolderColor, Color);
+	}
+	for (x = xl; x<PrevXl; x++)
+	{
+		c = L[x][y - dir];
+		if ((c != BolderColor) && (c != Color))
+			x = LineFill(x, y - dir, -
+				dir, xl, xr, L, BolderColor, Color);
+	}
+	for (x = PrevXr; x<xr; x++)
+	{
+		c = L[x][y - dir];
+		
+			if ((c != BolderColor) && (c != Color))
+				x = LineFill(x, y - dir, -dir, xl,
+					xr, L, BolderColor, Color);
+	}
+	return xr;
+}*/
