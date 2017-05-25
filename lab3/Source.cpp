@@ -6,11 +6,11 @@ using namespace std;
 void Line(HDC* hdc, int x1, int y1, int x2, int y2);
 void Grid(HDC* hdc, int xn, int yn, int size);
 void printPoint(HDC* hdc, int x, int y, int size);
-void LineCda(HDC* hdc, int x1, int y1, int x2, int y2, int size);
-int sign(double a);
-void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size);
-void DrawCircle(HDC* hdc, int x1, int y1, int radius, int size);
+void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size, int **&L);
 void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int size);
+void DrawCircle(HDC* hdc, int x1, int y1, int radius, int size, int** &L);
+void Triangle(HDC * hdc, int x1, int y1, int x2, int y2, int x3, int y3, int size, int **& L);
+int LineFill(int x, int y, int dir, int PrevXl, int PrevXr, int **& L, int BolderColor, int Color);
 
 int main() {
 
@@ -22,66 +22,102 @@ int main() {
 	RECT rc;
 
 	HPEN whitePen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-	HPEN redPen = CreatePen(PS_SOLID, 1, RGB(0, 255, 0));
-	HPEN bluePen = CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
+	HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
+	HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
 
 
 	int xn = 0, yn = 0, size;
 	int x1, y1, x2, y2;
 	int radius;
 
-	cout << "Введите количество столбцов сетки: ";
+	cout << "Колиество столбцов: ";
 	cin >> xn;
-	cout << "Введите количество строк сетки: ";
+	cout << "Количество строк: ";
 	cin >> yn;
-	cout << "Введите размер клетки (Длину ребра квадрата): ";
+	cout << "Размер клетки: ";
 	cin >> size;
-	/*cout << "Введите координаты начала отрезка для алгоритма ЦДА: ";
-	cin >> x1 >> y1;
-	cout << "Введите координаты конца отрезка для алгоритма ЦДА: ";
-	cin >> x2 >> y2;*/
+	xn++; yn++;
 
-
+	//Перемещаем 0 в левый нижний угол
 	GetClientRect(hwnd, &rc);
 	SetViewportOrgEx(hdc, rc.left, rc.bottom - 1, NULL);
 	SelectObject(hdc, whitePen);
 	Grid(&hdc, xn, yn, size);
 
+	//заполнение треугольника
+	int trx1, try1, trx2, try2, trx3, try3;
+	cout << "Введите точки треугольника: ";
+	cin >> trx1 >> try1 >> trx2 >> try2 >> trx3 >> try3;
 
-	SelectObject(hdc, redPen);
-	Sorttreug(&hdc, 10, 10, 60, 90, 90, 30, size);
+	SelectObject(hdc, redBrush);
+	Sorttreug(&hdc, trx1, try1, trx2, try2, trx3, try3, size);
+	system("pause");
+	///Вторая часть задания
+	system("cls");
+	Grid(&hdc, xn, yn, size);
 
-	SelectObject(hdc, bluePen);
-	LineBrezenhem(&hdc, 10, 10, 60, 90, size);
-	LineBrezenhem(&hdc, 60, 90, 90, 30, size);
-	LineBrezenhem(&hdc, 90, 30, 10, 10, size);
+	//буфер
+	xn++; yn++;
+	int** L = new int*[xn];
+	for (int i = 0; i < xn; i++) {
+		L[i] = new int[yn];
+	}
 
-	/*LineCda(&hdc, x1, y1, x2, y2, size);*/
+	for (int i = 0; i < xn; i++) {
+		for (int j = 0; j < yn; j++) {
+			L[i][j] = 0;
+		}
+	}
 
-	cout << "Введите координаты начала отрезка для алгоритма Брезенхема: ";
-	cin >> x1 >> y1;
-	cout << "Введите координаты конца отрезка для алгоритма Брезенхема: ";
-	cin >> x2 >> y2;
-
-	LineBrezenhem(&hdc, x1, y1, x2, y2, size);
-/*
-	cout << "Введите координаты центра окружности для алгоритма Брезенхема: ";
+	SelectObject(hdc, blueBrush);
+	//рисование окружности
+	cout << "Введите центр окружности: ";
 	cin >> x1 >> y1;
 	cout << "Введите радиус окружности: ";
 	cin >> radius;
+	DrawCircle(&hdc, x1, y1, radius, size, L);
 
-	DrawCircle(&hdc, x1, y1, radius, size);*/
 
+	cout << "Введите центр окружности: ";
+	cin >> x1 >> y1;
+	cout << "Введите радиус окружности: ";
+	cin >> radius;
+	DrawCircle(&hdc, x1, y1, radius, size, L);
+
+	int x3, y3;
+	cout << "Введите координаты треугольника: ";
+	cin >> x1 >> y1 >> x2 >> y2 >> x3 >> y3;
+	Triangle(&hdc, x1, y1, x2, y2, x3, y3, size, L);
+
+	//заливка
+	cout << "Введите точку, с которой начинается заливка: ";
+	cin >> x1 >> y1;
+	LineFill(x1, y1, 1, x1, y1, L, 1, 2);
+
+	for (int i = 0; i < xn; i++) {
+		for (int j = 0; j < yn; j++) {
+			if (L[i][j] == 1) {
+				SelectObject(hdc, blueBrush);
+				printPoint(&hdc, i, j, size);
+			}
+			else if (L[i][j] == 2) {
+				SelectObject(hdc, redBrush);
+				printPoint(&hdc, i, j, size);
+			}
+
+		}
+	}
+
+
+	system("pause");
 	return 0;
 }
 
-//рисование линии 
 void Line(HDC* hdc, int x1, int y1, int x2, int y2) {
 	MoveToEx(*hdc, x1, y1, NULL);
 	LineTo(*hdc, x2, y2);
 }
 
-//рисование сетки
 void Grid(HDC* hdc, int xn, int yn, int size) {
 
 	for (int y = 0; y <= yn; y++) {
@@ -93,71 +129,33 @@ void Grid(HDC* hdc, int xn, int yn, int size) {
 	}
 }
 
-//рисование точки 
 void printPoint(HDC* hdc, int x, int y, int size) {
 	x++; y++;
 	Ellipse(*hdc, (x - 1)*size + 1, -y*size + 1, x*size, -(y - 1)*size);
 }
 
-//рисование отрезка по алгоритму цифрового дифференциального анализатора (ЦДА) 
-void LineCda(HDC* hdc, int x1, int y1, int x2, int y2, int size) {
-
-	HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
-	SelectObject(*hdc, yellowBrush);
-
-	double Dx = 0, Dy = 0;
-	double x, y, lenght = 0;
-
-	lenght = fabs(x1 - x2) > fabs(y1 - y1) ? fabs(x1 - x2) : fabs(y1 - y1);
-
-	Dx = (x2 - x1) / lenght;
-	Dy = (y2 - y1) / lenght; // или Dх или Dу равно 1 
-
-	x = x1 + 0.5*sign(Dx); // начальные точки 
-	y = y1 + 0.5*sign(Dy);
-
-	for (int i = 1; i <= lenght; i++) {
-		printPoint(hdc, int(x), int(y), size);
-		x += Dx;
-		y += Dy;
-	}
-}
-
-//функция для определения знака числа 
-int sign(double a) {
-	if (a > 0)
-		return 1;
-	else if (a < 0)
-		return -1;
-	else if (a == 0)
-		return 0;
-}
-
-//рисование отрезка по алгоритму Брезенхема 
-void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size) {
-	/*HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
-	SelectObject(*hdc, redBrush);*/
-
+void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size, int **&L) {
 	int dx, dy, ch = 0, i = 0, e, dx2, dy2;
 	x2 -= x1; dx = abs(x2);
 	y2 -= y1; dy = abs(y2);
 	if (!x2 && !y2)
-		return; // Если начало совпадает с концом отрезка 
+		return;
 	if (x2) x2 = x2 < 0 ? -1 : 1;
 	if (y2) y2 = y2 < 0 ? -1 : 1;
 
 	if (dy > dx) {
 		swap(dy, dx);
 		ch = 1;
-	} // меняем местами x и y 
+	}
 
 	dx2 = dx << 1;
-	dy2 = dy << 1; // dx2 = 2*dx; dy2 = 2*dy; 
+	dy2 = dy << 1;
 
-	e = dy2 - dx; // Начальное значение ошибки;
+	e = dy2 - dx;
 	for (i = 0; i <= dx; ++i) {
 
 		printPoint(hdc, x1, y1, size);
+		L[x1][y1] = 1;
 		if (e > 0) {
 			if (ch) x1 += x2;
 			else y1 += y2;
@@ -172,42 +170,18 @@ void LineBrezenhem(HDC* hdc, int x1, int y1, int x2, int y2, int size) {
 	}
 }
 
-//рисование окружности по алгоритму Брезенхема
-void DrawCircle(HDC* hdc, int x1, int y1, int radius, int size) {
-	int x = 0;
-	int y = radius;
-	int delta = 1 - 2 * radius;
-	int error = 0;
-	while (y >= 0) {
-		printPoint(hdc, x1 + x, y1 + y, size);
-		printPoint(hdc, x1 + x, y1 - y, size);
-		printPoint(hdc, x1 - x, y1 + y, size);
-		printPoint(hdc, x1 - x, y1 - y, size);
-		error = 2 * (delta + y) - 1;
-		if (delta < 0 && error <= 0) {
-			++x;
-			delta += 2 * x + 1;
-			continue;
-		}
-		error = 2 * (delta - x) - 1;
-		if (delta > 0 && error > 0) {
-			--y;
-			delta += 1 - 2 * y;
-			continue;
-		}
-		++x;
-		delta += 2 * (x - y);
-		--y;
+void LineOne(HDC* hdc, int x1, int y1, int x2, int y2, int size) {
+	for (int i = x1; i <= x2; i++) {
+		printPoint(hdc, i, y1, size);
 	}
 }
-
 
 void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int size) {
 	int X[3] = { Ax,Bx,Cx };
 	int Y[3] = { Ay,By,Cy };
 
-	for (int i = 0; i<2; i++)
-		for (int j = 0; j<2; j++)
+	for (int i = 0; i < 2; i++)
+		for (int j = 0; j < 2; j++)
 			if (Y[j] < Y[j + 1]) {
 				swap(Y[j + 1], Y[j]);
 				swap(X[j + 1], X[j]);
@@ -232,14 +206,53 @@ void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int siz
 		if (x1 > x2)
 			swap(x1, x2);
 
-		LineBrezenhem(hdc, x1, sy, x2, sy, size);
+		LineOne(hdc, x1, sy, x2, sy, size);
 	}
 
 
 
 }
 
-/*int LineFill(int x, int y, int dir, int PrevXl, int PrevXr, int **L, int BolderColor, int Color)
+void DrawCircle(HDC* hdc, int x1, int y1, int radius, int size, int **&L) {
+
+	int x = 0;
+	int y = radius;
+	int delta = 1 - 2 * radius;
+	int error = 0;
+	while (y >= 0) {
+		printPoint(hdc, x1 + x, y1 + y, size);
+		printPoint(hdc, x1 + x, y1 - y, size);
+		printPoint(hdc, x1 - x, y1 + y, size);
+		printPoint(hdc, x1 - x, y1 - y, size);
+		L[x1 + x][y1 + y] = 1;
+		L[x1 + x][y1 - y] = 1;
+		L[x1 - x][y1 + y] = 1;
+		L[x1 - x][y1 - y] = 1;
+		error = 2 * (delta + y) - 1;
+		if (delta < 0 && error <= 0) {
+			++x;
+			delta += 2 * x + 1;
+			continue;
+		}
+
+		if (delta > 0 && error > 0) {
+			--y;
+			delta += 1 - 2 * y;
+			continue;
+		}
+		++x;
+		delta += 2 * (x - y);
+		--y;
+	}
+}
+
+void LineBuffer(int x1, int y1, int x2, int y2, int **&L, int Color) {
+	for (int i = x1; i <= x2; i++) {
+		L[i][y1] = Color;
+	}
+}
+
+int LineFill(int x, int y, int dir, int PrevXl, int PrevXr, int **&L, int BolderColor, int Color)
 {
 	int xl = x, xr = x;
 	int c;
@@ -251,7 +264,7 @@ void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int siz
 	while ((c != BolderColor) && (c != Color));
 	xl++;
 	xr--;
-	Line(xl, y, xr, y, L, Color);
+	LineBuffer(xl, y, xr, y, L, Color);
 	for (x = xl; x <= xr; x++)
 	{
 		c = L[x][y + dir];
@@ -269,10 +282,16 @@ void Sorttreug(HDC* hdc, int Ax, int Ay, int Bx, int By, int Cx, int Cy, int siz
 	for (x = PrevXr; x<xr; x++)
 	{
 		c = L[x][y - dir];
-		
-			if ((c != BolderColor) && (c != Color))
-				x = LineFill(x, y - dir, -dir, xl,
-					xr, L, BolderColor, Color);
+
+		if ((c != BolderColor) && (c != Color))
+			x = LineFill(x, y - dir, -dir, xl,
+				xr, L, BolderColor, Color);
 	}
 	return xr;
-}*/
+}
+
+void Triangle(HDC* hdc, int x1, int y1, int x2, int y2, int x3, int y3, int size, int **&L) {
+	LineBrezenhem(hdc, x1, y1, x2, y2, size, L);
+	LineBrezenhem(hdc, x2, y2, x3, y3, size, L);
+	LineBrezenhem(hdc, x3, y3, x1, y1, size, L);
+}
